@@ -23,4 +23,11 @@ export class InventoryPage extends BaseSwagLabPage {
     async getItemNames() {
         return this.inventoryItems.locator('.inventory_item_name').allTextContents();
     }
+
+    async getItemPrices() {
+        const prices = await this.page.$$eval('.inventory_item_price', items =>
+            items.map(item => parseFloat(item.innerText.replace('$', '')))
+        );
+        return prices;
+    }
 }
