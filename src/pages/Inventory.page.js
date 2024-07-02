@@ -30,4 +30,23 @@ export class InventoryPage extends BaseSwagLabPage {
         );
         return prices;
     }
+
+    async addRandomProductsToCart(count) {
+        // Get all product elements
+        const products = await this.page.$$('.inventory_item');
+
+        // Add random products to the cart
+        for (let i = 0; i < count; i++) {
+            const randomIndex = Math.floor(Math.random() * products.length);
+            const product = products[randomIndex];
+            
+            // Find and click the 'Add to cart' button for the product
+            const addToCartButton = await product.$('.btn_inventory');
+            if (addToCartButton) {
+                await addToCartButton.click();
+            } else {
+                throw new Error('Add to cart button not found');
+            }
+        }
+    }
 }

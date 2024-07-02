@@ -11,7 +11,6 @@ export class ShopingCartPage extends BaseSwagLabPage {
 
     get cartItems() { return this.page.locator(this.cartItemSelector); }
 
-    // async below added to show the function returns a promise
     async getCartItemByName(name) { return this.page.locator(this.cartItemSelector, { hasText: name }); }
 
     async removeCartItemByName(name) {
@@ -21,5 +20,23 @@ export class ShopingCartPage extends BaseSwagLabPage {
 
     async removeCartItemById(id) {
         await this.cartItems.nth(id).locator(this.removeItemSelector).click();
+    }
+
+
+    async getCartItems() {
+        const items = await this.page.$$('.cart_item');
+        return Promise.all(items.map(async item => ({
+            name: await item.$eval('.inventory_item_name', el => el.innerText),
+            description: await item.$eval('.inventory_item_desc', el => el.innerText),
+            price: parseFloat(await item.$eval('.inventory_item_price', el => el.innerText.replace('$', '')))
+        })));
+    }
+
+    async checkout() {
+        await this.page.click('.checkout_button');
+    }
+
+    async navigate() {
+        await this.page.click('.shopping_cart_link');
     }
 }
