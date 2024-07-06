@@ -22,14 +22,20 @@ export class ShopingCartPage extends BaseSwagLabPage {
         await this.cartItems.nth(id).locator(this.removeItemSelector).click();
     }
 
-
     async getCartItems() {
-        const items = await this.page.$$('.cart_item');
-        return Promise.all(items.map(async item => ({
-            name: await item.$eval('.inventory_item_name', el => el.innerText),
-            description: await item.$eval('.inventory_item_desc', el => el.innerText),
-            price: parseFloat(await item.$eval('.inventory_item_price', el => el.innerText.replace('$', '')))
-        })));
+        const itemCount = await this.cartItems.count();
+        const items = [];
+
+        for (let i = 0; i < itemCount; i++) {
+            const item = this.cartItems.nth(i);
+            const name = await item.locator('.inventory_item_name').innerText();
+            const description = await item.locator('.inventory_item_desc').innerText();
+            const priceText = await item.locator('.inventory_item_price').innerText();
+            const price = parseFloat(priceText.replace('$', ''));
+            items.push({ name, description, price });
+        }
+
+        return items;
     }
 
     async checkout() {

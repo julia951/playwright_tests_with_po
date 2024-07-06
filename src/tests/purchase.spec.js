@@ -1,6 +1,8 @@
 // purchase.spec.js
 const { expect } = require('@playwright/test');
 const { test } = require('../fixture');
+const { randomChoiceItems } = require('../utils/randomItems');
+
 
 test.describe('Shopping Cart and Checkout', () => {
     test.beforeEach(async ({ loginPage }) => {
@@ -9,7 +11,15 @@ test.describe('Shopping Cart and Checkout', () => {
     });
 
     test('Add products to cart, checkout, and verify', async ({ inventoryPage, shopingCartPage, checkoutPage }) => { 
-        await inventoryPage.addRandomProductsToCart(3); 
+        const numItems = await inventoryPage.inventoryItems.count();
+        const randomItems = randomChoiceItems(numItems);
+
+        await inventoryPage.addItemsToCart(randomItems);
+
+        const cartItemsDetails = await inventoryPage.getItemsDetails(randomItems);
+
+
+      //  await inventoryPage.addRandomProductsToCart(3); 
         
         await shopingCartPage.navigate();
         

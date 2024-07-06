@@ -1,9 +1,14 @@
-// InventoryPage.js
 const { BaseSwagLabPage } = require('./BaseSwagLab.page');
 
 export class InventoryPage extends BaseSwagLabPage {
     url = '/inventory.html';
 
+    inventoryItemsName = '.inventory_item_name';
+
+    inventoryItemsPrice = '.inventory_item_price';
+
+    inventoryItemsDescription = '.inventory_item_desc';
+    
     get headerTitle() { return this.page.locator('.title'); }
 
     get inventoryItems() { return this.page.locator('.inventory_item'); }
@@ -31,22 +36,54 @@ export class InventoryPage extends BaseSwagLabPage {
         return prices;
     }
 
-    async addRandomProductsToCart(count) {
-        // Get all product elements
-        const products = await this.page.$$('.inventory_item');
-
-        // Add random products to the cart
-        for (let i = 0; i < count; i++) {
-            const randomIndex = Math.floor(Math.random() * products.length);
-            const product = products[randomIndex];
-            
-            // Find and click the 'Add to cart' button for the product
-            const addToCartButton = await product.$('.btn_inventory');
-            if (addToCartButton) {
-                await addToCartButton.click();
-            } else {
-                throw new Error('Add to cart button not found');
-            }
+    async addItemsToCart(randomItems) {
+        for (const item of randomItems) {
+            await this.addItemToCartById(item);
         }
     }
+
+    async getItemsDetails(selectedItemsIndexes) {
+        const details = await Promise.all([
+            this.getInventoryItemsNames(selectedItemsIndexes),
+            this.getInventoryItemsDescriptions(selectedItemsIndexes),
+            this.getInventoryItemsPrices(selectedItemsIndexes),
+        ]);
+
+        return details[0].map((name, index) => ({
+            name,
+            description: details[1][index],
+            price: details[2][index],
+        }));
+    }
+
+    async getInventoryItemsNames(selectedItemsIndexes) {
+        return await Promise.all(selectedItemsIndexes.map(async (index) => await this.page.locator(this.inventoryItemsName).nth(index).textContent()));
+    }
+
+    async getInventoryItemsDescriptions(selectedItemsIndexes) {
+        return await Promise.all(selectedItemsIndexes.map(async (index) => await this.page.locator(this.inventoryItemsDescription).nth(index).textContent()));
+    }
+
+    async getInventoryItemsPrices(selectedItemsIndexes) {
+        return await Promise.all(selectedItemsIndexes.map(async (index) => {
+            const priceText = await this.page.locator(this.inventoryItemsPrice).nth(index).textContent();
+            return parseFloat(priceText.replace('$', ''));
+        }));
+    }
+
+    // async addRandomProductsToCart(count) {
+    //     const products = await this.page.locator('.inventory_item');
+
+    //     for (let i = 0; i < count; i++) {
+    //         const randomIndex = Math.floor(Math.random() * products.length);
+    //         const product = products[randomIndex];
+            
+    //         const addToCartButton = await product.locator('.btn_inventory');
+    //         if (addToCartButton) {
+    //             await addToCartButton.click();
+    //         } else {
+    //             throw new Error('Add to cart button not found');
+    //         }
+    //     }
+    // }
 }

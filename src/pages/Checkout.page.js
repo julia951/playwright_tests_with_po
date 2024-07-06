@@ -15,24 +15,38 @@ class CheckoutPage {
     }
 
     async getCheckoutItems() {
-        const items = await this.page.$$('.checkout_item');
-        return Promise.all(items.map(async item => ({
-            name: await item.$eval('.inventory_item_name', el => el.innerText),
-            description: await item.$eval('.inventory_item_desc', el => el.innerText),
-            price: parseFloat(await item.$eval('.inventory_item_price', el => el.innerText.replace('$', '')))
-        })));
+        const items = this.page.locator('.checkout_item');
+        const itemCount = await items.count();
+        const itemList = [];
+
+        for (let i = 0; i < itemCount; i++) {
+            const item = items.nth(i);
+            const name = await item.locator('.inventory_item_name').innerText();
+            const description = await item.locator('.inventory_item_desc').innerText();
+            const priceText = await item.locator('.inventory_item_price').innerText();
+            const price = parseFloat(priceText.replace('$', ''));
+            itemList.push({ name, description, price });
+        }
+
+        return itemList;
     }
 
     async calculateTotalPrice() {
-        const itemPrices = await this.page.$$eval('.inventory_item_price', items =>
-            items.map(item => parseFloat(item.innerText.replace('$', '')))
-        );
-        const totalPrice = itemPrices.reduce((acc, price) => acc + price, 0);
+        const prices = await this.page.locator('.inventory_item_price');
+        const priceCount = await prices.count();
+        let totalPrice = 0;
+
+        for (let i = 0; i < priceCount; i++) {
+            const priceText = await prices.nth(i).innerText();
+            const price = parseFloat(priceText.replace('$', ''));
+            totalPrice += price;
+        }
+
         return totalPrice;
     }
 
     async getDisplayedTotalPrice() {
-        const totalText = await this.page.$eval('.summary_total_label', el => el.innerText);
+        const totalText = await this.page.locator('.summary_total_label').innerText();
         return parseFloat(totalText.replace('Total: $', ''));
     }
 }
